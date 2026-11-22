@@ -1,0 +1,34 @@
+{
+  "passed": true,
+  "runs_checked": [
+    "cnn-17",
+    "cnn-27",
+    "cnn-37",
+    "cnn-47",
+    "cnn-57",
+    "yolo-17",
+    "yolo-27",
+    "yolo-37",
+    "yolo-47",
+    "yolo-57"
+  ],
+  "test_images_per_run": 2633,
+  "checkpoints_required": true,
+  "manifest": "c2a3b9888bae729b5f2c50289e4d2d8918fa15e699761a20178b7c3d1b77f8dd",
+  "hardware": [
+    "Tesla T4"
+  ],
+  "backends": [
+    "shared_torch"
+  ],
+  "checks": [
+    "frozen_manifest",
+    "no_group_or_hash_overlap",
+    "test_paths_and_labels",
+    "probabilities_and_argmax",
+    "metrics_recomputed",
+    "class_metrics",
+    "confusion_counts",
+    "best_validation_epoch"
+  ]
+}

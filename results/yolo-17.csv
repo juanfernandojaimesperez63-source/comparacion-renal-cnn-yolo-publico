@@ -1,0 +1,2 @@
+model,seed,best_epoch,final_epoch,training_seconds,hardware,manifest,smoke,backend,split,images,accuracy,precision_macro,recall_macro,f1_macro,latency_ms_p50,latency_ms_p95
+yolo,17,3,8,259.906356106,Tesla T4,c2a3b9888bae729b5f2c50289e4d2d8918fa15e699761a20178b7c3d1b77f8dd,False,shared_torch,test,2633,0.7763007975693126,0.7629023776943544,0.7591974548964852,0.7537817644191036,6.305925,8.78282655

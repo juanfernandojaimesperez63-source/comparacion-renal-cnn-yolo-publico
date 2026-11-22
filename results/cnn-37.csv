@@ -1,0 +1,2 @@
+model,seed,best_epoch,final_epoch,training_seconds,hardware,manifest,smoke,backend,split,images,accuracy,precision_macro,recall_macro,f1_macro,latency_ms_p50,latency_ms_p95
+cnn,37,7,12,311.08032939400005,Tesla T4,c2a3b9888bae729b5f2c50289e4d2d8918fa15e699761a20178b7c3d1b77f8dd,False,shared_torch,test,2633,0.7333839726547664,0.7334412348138639,0.726463192791028,0.7237704073589426,1.961986,3.210411949999998

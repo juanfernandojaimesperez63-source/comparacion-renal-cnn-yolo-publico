@@ -1,0 +1,7 @@
+{
+  "test": "paired_exact_sign_flip_two_sided",
+  "pairs": 5,
+  "delta_mean_yolo_minus_cnn": 0.04003221794214917,
+  "p": 0.1875,
+  "minimum_possible_p": 0.0625
+}
