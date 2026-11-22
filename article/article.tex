@@ -1,0 +1,139 @@
+\documentclass[conference]{IEEEtran}
+\usepackage{fontspec}
+\setmainfont{texgyretermes}[Extension=.otf,UprightFont=*-regular,BoldFont=*-bold,ItalicFont=*-italic,BoldItalicFont=*-bolditalic]
+\usepackage[spanish]{babel}
+\addto\captionsspanish{\renewcommand{\tablename}{Tabla}}
+\usepackage{graphicx,booktabs,amsmath,url,balance}
+\usepackage[hidelinks]{hyperref}
+\hypersetup{pdftitle={Comparación reproducible de CNN y YOLO26n-cls para imágenes renales},pdfauthor={Juan Fernando Jaimes Pérez y Miguel Andrés Veloza}}
+\graphicspath{{../results/}{../results/full/}{figures/}}
+\renewcommand{\IEEEkeywordsname}{Palabras clave}
+\title{Comparación reproducible de una CNN de referencia y YOLO26n-cls para clasificación de imágenes renales}
+\author{\IEEEauthorblockN{Juan Fernando Jaimes Pérez y Miguel Andrés Veloza}
+\IEEEauthorblockA{Programa de Ingeniería de Sistemas\\Universidad Simón Bolívar, sede Cúcuta\\Cúcuta, Colombia}}
+\begin{document}
+\maketitle
+\input{abstract.tex}
+\begin{IEEEkeywords}
+clasificación de imágenes, riñón, redes convolucionales, YOLO26, reproducibilidad, fuga de datos.
+\end{IEEEkeywords}
+\section{Introducción}
+La clasificación automática de imágenes renales se ha estudiado como apoyo al análisis de quistes, cálculos y tumores. Su evaluación exige definir qué representa cada etiqueta y cómo se distribuyen las imágenes entre los conjuntos de entrenamiento y evaluación. Una exactitud elevada sobre cortes de un conjunto público requiere interpretarse en relación con su procedencia, las transformaciones aplicadas y la independencia entre ejemplos. Las decisiones aprendidas pueden depender tanto de la anatomía como de características del proceso de adquisición y almacenamiento.
+
+La recopilación de GonzaJL disponible en Kaggle organiza imágenes en cuatro clases, Cyst, Normal, Stone y Tumor \cite{dataset}. La unidad de predicción de este trabajo es una imagen completa. La etiqueta señala la categoría asignada por el dataset. Esta formulación permite comparar una CNN convencional con una variante de clasificación de la familia YOLO. El resultado por imagen consiste en cuatro probabilidades y una categoría predicha.
+
+El notebook público de Tahmeed \cite{baseline} ofrece una arquitectura compacta entrenada desde cero sobre esta misma recopilación. Su registro histórico permite identificar capas e hiperparámetros, pero usa una división de entrenamiento y validación distinta de la adoptada en este estudio. Reproducir la arquitectura y explicar los cambios de protocolo permite evaluar su comportamiento bajo una partición común y documentada.
+
+YOLO surgió como una familia de detectores de una sola etapa \cite{yolo}. Las implementaciones de Ultralytics incluyen variantes específicas de clasificación. YOLO26n-cls reutiliza un backbone convolucional y la cabeza Classify \cite{yolo26,ultralytics}. El interés de la comparación es medir el desempeño y costo de ambas redes con imágenes, semillas y presupuesto compartidos. Las cifras publicadas en otros conjuntos sirven como antecedentes para formular el estudio.
+
+El objetivo es comparar la CNN de referencia y YOLO26n-cls mediante cinco entrenamientos independientes por modelo, usando F1 macro como métrica principal. Se evalúan además exactitud, precisión, recall, desempeño por clase, tiempo de entrenamiento y latencia. La contribución práctica es un experimento verificable que incorpora auditoría de duplicados, agrupamiento de similitudes, un manifiesto compartido y conservación de predicciones por ejecución.
+El código y los resultados del experimento se conservan en el repositorio del proyecto\footnote{\url{https://github.com/juanfernandojaimesperez63-source/comparacion-renal-cnn-yolo-publico}}, de acceso público.
+\section{Trabajos relacionados}
+Islam y colaboradores \cite{islam} describieron el conjunto de TC renal de hospitales de Dhaka y estudiaron redes de transferencia y Vision Transformers. Esta fuente ayuda a identificar una parte de la procedencia declarada de la recopilación de GonzaJL. La recopilación empleada aquí agrega otras fuentes, por lo que la correspondencia entre ambos conjuntos debe verificarse por archivos y metadatos.
+
+Pande y Agarwal \cite{pande} estudiaron YOLOv8n-cls en imágenes renales del conjunto original de 12.446 imágenes. Su trabajo constituye un antecedente directo de clasificación renal con una variante YOLO. Su división 80/20 y la terminología de detección usada en partes del artículo requieren cautela al interpretar sus figuras y métricas junto a un experimento de clasificación con prueba independiente.
+
+KidneyNet \cite{kidneynet} propone una CNN para diagnóstico automático a partir de TC y muestra el interés de desarrollar arquitecturas específicas para el problema renal. LiteRenalNet \cite{lite} combina ramas de detalle y semántica con atención espacial y por canales. Estos trabajos motivan evaluar conjuntamente capacidad predictiva, complejidad e interpretación, aunque sus arquitecturas y protocolos difieren del presente estudio. La comparación directa se limita a las dos implementaciones entrenadas aquí.
+
+El preprint de YOLO26 \cite{yolo26} describe las variantes de clasificación y presenta un análisis de optimizadores en ImageNet en su suplemento. La cabeza Classify tiene una función documentada en código versionado \cite{ultralytics}. Este experimento utiliza Adam para ambas redes, y por ello su entrenamiento responde al protocolo compartido descrito en la sección de métodos.
+
+\section{Materiales y métodos}
+\subsection{Procedencia y auditoría de las imágenes}
+Se descargó la versión 2 de la recopilación de GonzaJL. La descripción de Kaggle atribuye las imágenes a cuatro fuentes, CT Kidney Dataset, Kidney Stones MRI and CT scans, KidneyStone y Medical Scan Classification Dataset. El ZIP se identificó mediante SHA-256 y se conservaron metadatos de la consulta. La auditoría decodificó cada imagen con Pillow, registró dimensiones, modo, formato y dos hashes, uno de los bytes y otro de los píxeles RGB con sus dimensiones.
+
+Se encontraron 11.756 imágenes válidas, 2.939 por clase. Todas tenían 224 por 224 píxeles y tres canales RGB. Se observaron 9.417 archivos JPEG y 2.339 PNG, sin errores de decodificación. El archivo datos.csv contenía 11.756 rutas distintas y las etiquetas coincidían con las carpetas. El formato presenta asociación con la clase, con todos los quistes y tumores en JPEG y parte de las clases Normal y Stone en PNG. Esta distribución debe considerarse en el análisis de posibles atajos visuales.
+
+Kaggle declara CC0 para la recopilación. Las fuentes declaradas muestran términos heterogéneos, CC BY 4.0 para CT Kidney Dataset, licencia desconocida para dos fuentes y otros términos para Medical Scan Classification Dataset. Se conserva esta distinción en la documentación del proyecto. La procedencia y modalidad por imagen quedan sin resolver en los metadatos distribuidos, lo que limita la caracterización de subgrupos y la interpretación de la generalización entre fuentes.
+
+\subsection{Duplicados y similitud antes de la partición}
+Se identificaron 1.225 copias exactas adicionales, organizadas en 1.222 grupos con multiplicidad. En esta versión, el conteo coincidió con la comparación de bytes y de píxeles. Se conservó un representante determinista de cada conjunto idéntico. El balance original cambió al retirar 255 copias de Cyst, 172 de Normal y 798 de Stone. No se encontraron copias adicionales en Tumor.
+
+Para imágenes de píxeles distintos se calculó un dHash de 64 bits sobre una imagen gris de 9 por 8. Se exigió distancia de Hamming de hasta cuatro bits y error cuadrático medio raíz de hasta 0,035 entre miniaturas grises de 32 por 32 normalizadas a [0,1]. El filtro combina una comparación de variaciones locales y una comprobación de intensidad global. Los umbrales se fijaron durante la preparación de los datos, antes del entrenamiento completo y de consultar las métricas de prueba.
+
+El procedimiento identificó 21.106 pares con píxeles distintos que cumplen ambos umbrales, sin cruces de clase. Se revisó visualmente una muestra de 12 pares cerca del umbral de intensidad. Los pares se conectaron mediante componentes conexos. Una cadena de vecinos conserva a todas las imágenes de su componente dentro de una sola partición. El mayor grupo tenía 225 archivos. Este criterio puede agrupar cortes relacionados y también introducir agrupaciones conservadoras entre imágenes de aspecto similar.
+
+La similitud visual carece de identificadores clínicos que permitan demostrar identidad de paciente. Los nombres secuenciales, el CSV y la ausencia de etiquetas EXIF útiles impiden una partición verificable por paciente. En consecuencia, la evaluación se interpreta como clasificación de imágenes con control heurístico de similitud. Queda posible una relación entre cortes de un mismo estudio que el criterio empleado no reconozca, especialmente al variar plano o apariencia.
+
+\begin{table}[t]
+\caption{Partición compartida después de eliminar copias exactas.}
+\label{tab:split}\centering
+\begin{tabular}{lrrrr}\toprule
+Clase & Entrena & Prueba & Valida & Retira\\\midrule
+Cyst & 1879 & 671 & 134 & 255\\
+Normal & 1937 & 692 & 138 & 172\\
+Stone & 1499 & 535 & 107 & 798\\
+Tumor & 2057 & 735 & 147 & 0\\\midrule
+Total & 7372 & 2633 & 526 & 1225\\\bottomrule
+\end{tabular}
+\end{table}
+\subsection{Construcción de una partición única}
+Se asignaron grupos completos con semilla de partición 27 y un objetivo estratificado de 70\% entrenamiento, 25\% prueba y 5\% validación. Este orden corresponde a la guía de la actividad. La asignación equilibró los tamaños por clase preservando la integridad de los grupos. La Tabla~\ref{tab:split} muestra los conteos finales sobre 10.531 imágenes únicas. Las fracciones resultantes fueron 70,0028\%, 25,0024\% y 4,9948\%, respectivamente.
+
+Se guardó un único manifiesto con ruta, clase, hashes, grupo y partición. Ambos modelos consultaron ese archivo. Se verificó que ningún grupo ni hash de píxeles apareciera en más de un conjunto activo. Las copias retiradas quedaron identificadas en el mismo manifiesto para permitir inspección y reproducción. La exclusión de duplicados explica que el número de imágenes por clase deje de ser idéntico.
+
+\begin{figure}[t]
+\centering\includegraphics[width=\columnwidth]{dataset_split.png}
+\caption{Distribución de la partición compartida y copias exactas retiradas.}\label{fig:split}
+\end{figure}
+La Fig.~\ref{fig:split} muestra el cambio de balance al retirar copias exactas. La clase Stone pierde una fracción mayor de archivos.
+\subsection{CNN de referencia y fidelidad de la adaptación}
+La arquitectura se tomó del notebook de Tahmeed \cite{baseline}. Consta de cuatro convoluciones con 32, 64, 128 y 256 filtros, núcleos de 5, 5, 3 y 3, stride 2, padding same y activación ReLU. Cada convolución va seguida de MaxPool de 2 por 2. La salida se aplana y pasa por una capa densa de 128 unidades con activación lineal y una capa softmax de cuatro unidades. Se verificaron 456.132 parámetros entrenables.
+
+La arquitectura original de Keras se adaptó a PyTorch para ejecutar ambos modelos con el mismo backend en una GPU NVIDIA Tesla T4 asignada por Google Colab. Se implementó padding explícito para reproducir las dimensiones de same. Una comprobación con pesos transferidos verificó igual número de parámetros y una diferencia máxima de $4{,}47\times10^{-8}$ entre probabilidades de inferencia en tres entradas de prueba numérica. Esta comprobación valida la transformación de la arquitectura; las inicializaciones y las trayectorias de optimización pueden variar entre frameworks.
+
+Se mantuvo la capa densa lineal observada en el código original. Los píxeles se normalizaron mediante un factor 1/255. El notebook histórico usó lotes de 64, un 25\% de validación y guardado por exactitud de validación. Este experimento usa lote 32 y selección por F1 macro de validación. Los cambios permiten alinear el protocolo entre redes y se declaran al contrastar con la cifra histórica de 0,87411 de exactitud de validación del mejor checkpoint registrado.
+
+\subsection{YOLO26n en modo clasificación}
+Se construyó el modelo desde yolo26n-cls.yaml del paquete Ultralytics 8.4.0 y se configuró nc=4. El backbone incluye convoluciones, bloques C3k2 y C2PSA. La cabeza Classify combina una convolución, promedio global y una capa lineal que entrega cuatro logits durante entrenamiento. En inferencia devuelve probabilidades tras softmax. Se verificaron 1.536.228 parámetros entrenables con la salida adaptada.
+
+La implementación utiliza PyTorch y conserva la arquitectura del YAML de clasificación. El bucle de entrenamiento explícito facilita emplear las mismas imágenes aumentadas, orden de ejemplos y regla de selección que la CNN. Se inicializaron ambos modelos desde cero. La comparación caracteriza estas arquitecturas bajo Adam y el presupuesto definido, mientras que los resultados de la receta MuSGD del artículo de YOLO26 corresponden a otro diseño experimental \cite{yolo26}.
+
+\begin{figure*}[t]
+\centering\includegraphics[width=\textwidth]{architectures.png}
+\caption{Esquemas de las arquitecturas usadas con cuatro salidas.}\label{fig:architectures}
+\end{figure*}
+La Fig.~\ref{fig:architectures} resume los recorridos desde los píxeles hasta las probabilidades. Las dos redes contienen convoluciones y difieren en sus bloques y cabeza de clasificación.
+\subsection{Entrenamiento y ejecuciones repetidas}
+Se usaron las semillas 17, 27, 37, 47 y 57 para cada arquitectura. La partición se mantuvo fija y la semilla de cada corrida controló inicialización y orden de entrenamiento. Cada ejecución se inició en un proceso independiente para liberar memoria y estado del framework al terminar. Las corridas finalizadas se identificaron mediante archivos de configuración y se conservaron al reanudar el trabajo. Una interrupción dentro de una corrida provoca su reinicio desde la misma semilla.
+
+La Tabla~\ref{tab:hyper} resume el protocolo. Adam \cite{adam} tuvo tasa constante de 0,001 y épsilon de $10^{-7}$. Las redes recibieron lotes de 32 e imágenes RGB de 224 por 224. Se limitaron a 20 épocas con paciencia de cinco épocas sin mejora del F1 macro de validación. Se guardó el primer checkpoint que alcanzó cada máximo nuevo. La regla de parada y el conjunto de validación fueron comunes a ambas redes.
+
+Los aumentos de entrenamiento se generaron con Pillow, con volteos horizontal y vertical independientes de probabilidad 0,5, y rotación uniforme entre -108 y 108 grados con interpolación bilineal y relleno negro. Se usó el mismo generador por semilla para ambos modelos. Estas transformaciones mantienen el diseño del notebook de referencia en cuanto a volteos y amplitud de rotación, con una implementación externa compartida. Su amplitud y el relleno pueden modificar la plausibilidad anatómica y constituyen una limitación del protocolo.
+
+\begin{table}[t]
+\caption{Hiperparámetros compartidos por ambas redes.}\label{tab:hyper}\centering
+\begin{tabular}{ll}\toprule
+Parámetro & Valor\\\midrule
+Inicialización & Aleatoria\\
+Optimizador & Adam\\
+Tasa de aprendizaje & 0,001 constante\\
+Épsilon & $10^{-7}$\\
+Lote y tamaño & 32; RGB $224\times224$\\
+Máximo de épocas & 20\\
+Paciencia & 5 épocas\\
+Selección & Mayor F1 macro de validación\\
+Pérdida & Entropía cruzada multiclase\\
+Semillas & 17, 27, 37, 47, 57\\\bottomrule
+\end{tabular}
+\end{table}
+\subsection{Métricas, estadística y eficiencia}
+El F1 macro es la media aritmética de los F1 de las cuatro clases, con igual contribución de cada categoría. Se calcularon además exactitud, precisión macro, recall macro y métricas individuales. Las clases sin predicciones positivas reciben cero en las divisiones indefinidas. Se guardaron probabilidades y etiquetas de cada imagen para que la matriz de confusión y los resúmenes puedan reconstruirse.
+
+Las métricas de las cinco semillas se resumieron mediante media y desviación estándar muestral. Para la prueba bilateral se definieron cinco diferencias pareadas de F1, YOLO menos CNN, y se enumeraron las $2^5=32$ inversiones de signo. El valor p es la fracción de medias permutadas con magnitud al menos igual a la observada. Bajo la hipótesis nula, la validez del procedimiento requiere intercambiabilidad de signos de las diferencias. Esta hipótesis se refiere a la variabilidad de las corridas sobre la partición fija.
+
+Con cinco pares, el menor valor p bilateral posible es 0,0625. Se reporta esta resolución junto con el efecto medio y cada diferencia. La prueba proporciona evidencia limitada con este tamaño muestral y la dependencia compartida del conjunto de prueba. Los resultados describen la variación del entrenamiento condicionada a una única partición. La incertidumbre debida a elegir otros pacientes o centros requeriría un diseño adicional.
+
+El tiempo de entrenamiento se midió con reloj de pared desde el primer paso hasta guardar el último historial. Incluye aumentos, validación y escritura de checkpoints. Las descargas e instalaciones quedan fuera del intervalo. La latencia se midió con lote uno sobre imágenes ya decodificadas y redimensionadas. Se hicieron 20 pasos de calentamiento y 100 mediciones, incluyendo normalización, paso por la red y devolución de probabilidades a CPU. Se reportan mediana y percentil 95. Los tiempos describen el entorno de Colab asignado y las operaciones del protocolo, incluido el guardado de checkpoints. Su extrapolación a otro equipo requiere repetir la medición.
+
+\section{Resultados}
+\input{results.tex}
+\section{Discusión}
+\input{discussion.tex}
+\balance
+\section{Conclusiones}
+\input{conclusions.tex}
+\subsection*{Uso de inteligencia artificial}
+Se utilizó Codex como apoyo para la implementación, automatización del experimento y elaboración de la documentación. Las métricas se verificaron mediante los registros y predicciones guardadas. La revisión e interpretación final corresponden a los autores.
+\clearpage
+\input{references.tex}
+\end{document}
