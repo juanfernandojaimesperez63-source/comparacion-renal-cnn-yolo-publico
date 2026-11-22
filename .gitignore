@@ -1,0 +1,17 @@
+/data/raw/
+/data/renal.zip*
+/results/full/**/*.pt
+/results/full/**/*.h5
+/results/smoke/
+/.ultralytics/
+.venv/
+__pycache__/
+.ipynb_checkpoints/
+.DS_Store
+
+# Material personal de estudio y ensayo
+/Guia_*.pdf
+/Guia_*.txt
+/Sustentacion.pdf
+/EMPIEZA_AQUI.txt
+/docs/Guia_*.txt
