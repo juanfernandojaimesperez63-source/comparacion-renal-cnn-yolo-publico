@@ -13,7 +13,7 @@ resultados y documentación técnica.
 ## Estado del proyecto
 
 **Completado y verificado el 22 de noviembre de 2026.** Autores: Juan Fernando
-Jaimes Pérez y Miguel Andrés Veloza. Afiliación: Programa de Ingeniería de Sistemas,
+Jaimes Pérez, Miguel Andrés Veloza y Gabriela Contreras García. Afiliación: Programa de Ingeniería de Sistemas,
 Universidad Simón Bolívar, sede Cúcuta, Colombia. Se ejecutaron cinco semillas por modelo,
 diez entrenamientos y diez evaluaciones sobre las mismas 2.633 imágenes de prueba.
 Todas las corridas definitivas utilizaron el backend compartido PyTorch 2.9.1 y
